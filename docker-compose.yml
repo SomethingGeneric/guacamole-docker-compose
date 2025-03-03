@@ -16,7 +16,6 @@
 # - create a service 'guacd_compose' from 'guacamole/guacd' connected to 'guacnetwork_compose'
 # - create a service 'postgres_guacamole_compose' (1) from 'postgres' connected to 'guacnetwork_compose'
 # - create a service 'guacamole_compose' (2)  from 'guacamole/guacamole/' conn. to 'guacnetwork_compose'
-# - create a service 'nginx_guacamole_compose' (3) from 'nginx' connected to 'guacnetwork_compose'
 #
 # (1)
 #  DB-Init script is in './init/initdb.sql' it has been created executing
@@ -40,17 +39,6 @@
 # (2)
 #  Make sure you use the same value for 'POSTGRES_USER' and 'POSTGRES_PASSWORD'
 #  as configured under (1)
-#
-# (3)
-#  ./nginx/templates folder will be mapped read-only into the container at /etc/nginx/templates
-#  and according to the official nginx container docs the guacamole.conf.template will be
-#  placed in /etc/nginx/conf.d/guacamole.conf after container startup.
-#  ./nginx/ssl will be mapped into the container at /etc/nginx/ssl
-#  prepare.sh creates a a self-signed certificate. If you want to use your own certs
-#  just remove the part that generates the certs from prepare.sh and replace
-#  'self-ssl.key' and 'self.cert' with your certificate.
-#  nginx will export port 8443 to the outside world, make sure that this port is reachable
-#  on your system from the "outside world". All other traffic is only internal.
 #
 #  You could remove the entire 'nginx' service from this file if you want to use your own
 #  reverse proxy in front of guacamole. If doing so, make sure you change the line
@@ -143,24 +131,5 @@ services:
     volumes:
       - ./record:/record:rw
     ports:
-## enable next line if not using nginx
-##    - 8080:8080/tcp # Guacamole is on :8080/guacamole, not /.
-## enable next line when using nginx
-    - 8080/tcp
+    - 8080:8080/tcp # Guacamole is on :8080/guacamole, not /.
     restart: always
-
-########### optional ##############
-  # nginx
-  nginx:
-   container_name: nginx_guacamole_compose
-   restart: always
-   image: nginx:latest
-   volumes:
-   - ./nginx/templates:/etc/nginx/templates:ro
-   - ./nginx/ssl/self.cert:/etc/nginx/ssl/self.cert:ro
-   - ./nginx/ssl/self-ssl.key:/etc/nginx/ssl/self-ssl.key:ro
-   ports:
-   - 8443:443
-   networks:
-     - guacnetwork_compose
-####################################################################################
